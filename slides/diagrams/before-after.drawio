@@ -1,0 +1,128 @@
+<mxfile host="app.diagrams.net" modified="2026-04-04T00:00:00.000Z" agent="Claude" version="24.0.0" type="device">
+  <diagram id="ba" name="Before and After">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- ROW LABELS -->
+        <mxCell id="lbl1" value="TODAY" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];strokeColor=none;fillColor=none;fontSize=14;fontColor=#EF4444;fontStyle=1;letterSpacing=2;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="120" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="lbl2" value="WITH AI AGENT" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];strokeColor=none;fillColor=none;fontSize=14;fontColor=#10B981;fontStyle=1;letterSpacing=2;" vertex="1" parent="1">
+          <mxGeometry x="40" y="310" width="200" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== MANUAL TIMELINE (top) ===== -->
+
+        <!-- Step 1: Alert fires -->
+        <mxCell id="m1" value="&lt;b&gt;Alert fires&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#94A3B8&quot;&gt;Error rate breaches&lt;br&gt;threshold&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E293B;fontSize=11;arcSize=12;shadow=1;strokeWidth=2;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="90" width="150" height="85" as="geometry"/>
+        </mxCell>
+
+        <!-- Step 2: Engineer responds -->
+        <mxCell id="m2" value="&lt;b&gt;Engineer paged&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#94A3B8&quot;&gt;Context-switches,&lt;br&gt;opens laptop&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#EF4444;fontColor=#1E293B;fontSize=11;arcSize=12;shadow=1;strokeWidth=2;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="240" y="90" width="170" height="85" as="geometry"/>
+        </mxCell>
+
+        <!-- Step 3: Manual investigation -->
+        <mxCell id="m3" value="&lt;b&gt;Manual investigation&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#94A3B8&quot;&gt;Logs, metrics, traces,&lt;br&gt;dashboards, source code&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#EF4444;fontColor=#1E293B;fontSize=11;arcSize=12;shadow=1;strokeWidth=2;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="460" y="90" width="300" height="85" as="geometry"/>
+        </mxCell>
+
+        <!-- Step 4: Root cause found -->
+        <mxCell id="m4" value="&lt;b&gt;Root cause&lt;br&gt;identified&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#EF4444;fontColor=#1E293B;fontSize=11;arcSize=12;shadow=1;strokeWidth=2;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="810" y="90" width="140" height="85" as="geometry"/>
+        </mxCell>
+
+        <!-- Step 5: RCA written -->
+        <mxCell id="m5" value="&lt;b&gt;RCA written up&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#94A3B8&quot;&gt;Often the&lt;br&gt;next morning&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#EF4444;fontColor=#1E293B;fontSize=11;arcSize=12;shadow=1;strokeWidth=2;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="90" width="160" height="85" as="geometry"/>
+        </mxCell>
+
+        <!-- Manual arrows -->
+        <mxCell id="ma1" style="endArrow=block;endFill=1;html=1;strokeColor=#F87171;strokeWidth=2;" edge="1" source="m1" target="m2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ma2" style="endArrow=block;endFill=1;html=1;strokeColor=#F87171;strokeWidth=2;" edge="1" source="m2" target="m3" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ma3" style="endArrow=block;endFill=1;html=1;strokeColor=#F87171;strokeWidth=2;" edge="1" source="m3" target="m4" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ma4" style="endArrow=block;endFill=1;html=1;strokeColor=#F87171;strokeWidth=2;" edge="1" source="m4" target="m5" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Manual time labels -->
+        <mxCell id="mt1" value="0 min" style="text;html=1;align=center;verticalAlign=top;resizable=0;points=[];strokeColor=none;fillColor=none;fontSize=10;fontColor=#94A3B8;" vertex="1" parent="1">
+          <mxGeometry x="80" y="182" width="60" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="mt2" value="5–10 min" style="text;html=1;align=center;verticalAlign=top;resizable=0;points=[];strokeColor=none;fillColor=none;fontSize=10;fontColor=#94A3B8;" vertex="1" parent="1">
+          <mxGeometry x="285" y="182" width="80" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="mt3" value="10–30 min" style="text;html=1;align=center;verticalAlign=top;resizable=0;points=[];strokeColor=none;fillColor=none;fontSize=10;fontColor=#94A3B8;" vertex="1" parent="1">
+          <mxGeometry x="570" y="182" width="80" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="mt4" value="30–45 min" style="text;html=1;align=center;verticalAlign=top;resizable=0;points=[];strokeColor=none;fillColor=none;fontSize=10;fontColor=#94A3B8;" vertex="1" parent="1">
+          <mxGeometry x="840" y="182" width="80" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="mt5" value="next morning" style="text;html=1;align=center;verticalAlign=top;resizable=0;points=[];strokeColor=none;fillColor=none;fontSize=10;fontColor=#EF4444;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="1030" y="182" width="100" height="20" as="geometry"/>
+        </mxCell>
+
+        <!-- Total time bracket manual -->
+        <mxCell id="mtotal" value="&lt;font style=&quot;font-size:16px&quot;&gt;30–45 minutes&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#94A3B8&quot;&gt;+ delayed RCA write-up&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];strokeColor=none;fillColor=none;fontSize=14;fontColor=#EF4444;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="105" width="220" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== AUTOMATED TIMELINE (bottom) ===== -->
+
+        <!-- Step 1: Alert fires (same) -->
+        <mxCell id="a1" value="&lt;b&gt;Alert fires&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#94A3B8&quot;&gt;Error rate breaches&lt;br&gt;threshold&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E293B;fontSize=11;arcSize=12;shadow=1;strokeWidth=2;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="360" width="150" height="85" as="geometry"/>
+        </mxCell>
+
+        <!-- Step 2: Agent investigates -->
+        <mxCell id="a2" value="&lt;b&gt;Agent triages&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#94A3B8&quot;&gt;Logs, metrics, traces,&lt;br&gt;source code — autonomously&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D1FAE5;strokeColor=#10B981;fontColor=#1E293B;fontSize=11;arcSize=12;shadow=1;strokeWidth=2;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="240" y="360" width="220" height="85" as="geometry"/>
+        </mxCell>
+
+        <!-- Step 3: RCA filed -->
+        <mxCell id="a3" value="&lt;b&gt;RCA issue filed&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#94A3B8&quot;&gt;Structured, with&lt;br&gt;all evidence attached&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D1FAE5;strokeColor=#10B981;fontColor=#1E293B;fontSize=11;arcSize=12;shadow=1;strokeWidth=2;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="510" y="360" width="170" height="85" as="geometry"/>
+        </mxCell>
+
+        <!-- Automated arrows -->
+        <mxCell id="aa1" style="endArrow=block;endFill=1;html=1;strokeColor=#34D399;strokeWidth=2;" edge="1" source="a1" target="a2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="aa2" style="endArrow=block;endFill=1;html=1;strokeColor=#34D399;strokeWidth=2;" edge="1" source="a2" target="a3" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Automated time label -->
+        <mxCell id="at1" value="0 sec" style="text;html=1;align=center;verticalAlign=top;resizable=0;points=[];strokeColor=none;fillColor=none;fontSize=10;fontColor=#94A3B8;" vertex="1" parent="1">
+          <mxGeometry x="80" y="452" width="60" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="at3" value="~1–2 min" style="text;html=1;align=center;verticalAlign=top;resizable=0;points=[];strokeColor=none;fillColor=none;fontSize=10;fontColor=#10B981;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="555" y="452" width="80" height="20" as="geometry"/>
+        </mxCell>
+
+        <!-- Total time automated -->
+        <mxCell id="atotal" value="&lt;font style=&quot;font-size:16px&quot;&gt;~1–2 minutes&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#94A3B8&quot;&gt;RCA included, no human needed&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];strokeColor=none;fillColor=none;fontSize=14;fontColor=#10B981;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="720" y="375" width="250" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- Divider line -->
+        <mxCell id="div" value="" style="endArrow=none;html=1;strokeColor=#E2E8F0;strokeWidth=1;dashed=1;dashPattern=12 8;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="40" y="260" as="sourcePoint"/>
+            <mxPoint x="1400" y="260" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

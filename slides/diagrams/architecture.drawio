@@ -1,0 +1,115 @@
+<mxfile host="app.diagrams.net" modified="2026-04-04T00:00:00.000Z" agent="Claude" version="24.0.0" type="device">
+  <diagram id="arch" name="Architecture">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- Group backgrounds -->
+        <mxCell id="g1" value="APPLICATION" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#E2E8F0;strokeWidth=1;verticalAlign=top;fontColor=#94A3B8;fontSize=10;fontStyle=1;arcSize=6;spacingTop=8;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="20" y="30" width="290" height="380" as="geometry"/>
+        </mxCell>
+        <mxCell id="g2" value="OBSERVABILITY" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#E2E8F0;strokeWidth=1;verticalAlign=top;fontColor=#94A3B8;fontSize=10;fontStyle=1;arcSize=6;spacingTop=8;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="340" y="30" width="290" height="380" as="geometry"/>
+        </mxCell>
+        <mxCell id="g3" value="INCIDENT RESPONSE" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#E2E8F0;strokeWidth=1;verticalAlign=top;fontColor=#94A3B8;fontSize=10;fontStyle=1;arcSize=6;spacingTop=8;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="660" y="30" width="560" height="380" as="geometry"/>
+        </mxCell>
+
+        <!-- Main flow boxes -->
+        <mxCell id="api" value="&lt;b style=&quot;font-size:14px&quot;&gt;Go Order API&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#64748B&quot; style=&quot;font-size:11px&quot;&gt;ECS Fargate&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontColor=#1E293B;fontSize=13;arcSize=12;shadow=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="55" y="100" width="220" height="90" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="cw" value="&lt;b style=&quot;font-size:14px&quot;&gt;CloudWatch&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#64748B&quot; style=&quot;font-size:11px&quot;&gt;Logs · Metrics · Alarms&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#F59E0B;fontColor=#1E293B;fontSize=13;arcSize=12;shadow=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="375" y="100" width="220" height="90" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="agent" value="&lt;b style=&quot;font-size:14px&quot;&gt;AI Triage Agent&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#64748B&quot; style=&quot;font-size:11px&quot;&gt;Lambda + Strands SDK&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE9FE;strokeColor=#8B5CF6;fontColor=#1E293B;fontSize=13;arcSize=12;shadow=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="720" y="100" width="220" height="90" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="issue" value="&lt;b style=&quot;font-size:14px&quot;&gt;RCA Issue&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#64748B&quot; style=&quot;font-size:11px&quot;&gt;GitHub / GitLab&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D1FAE5;strokeColor=#10B981;fontColor=#1E293B;fontSize=13;arcSize=12;shadow=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="100" width="170" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- Supporting boxes -->
+        <mxCell id="ddb" value="&lt;b&gt;DynamoDB&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Orders table&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#CBD5E1;fontColor=#475569;fontSize=11;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="85" y="290" width="160" height="65" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="xray" value="&lt;b&gt;X-Ray&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Distributed traces&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#CBD5E1;fontColor=#475569;fontSize=11;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="405" y="290" width="160" height="65" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="bedrock" value="&lt;b&gt;Amazon Bedrock&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Claude (Sonnet)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#CBD5E1;fontColor=#475569;fontSize=11;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="750" y="290" width="160" height="65" as="geometry"/>
+        </mxCell>
+
+        <!-- SNS -->
+        <mxCell id="sns" value="&lt;b&gt;SNS&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#EF4444;fontColor=#991B1B;fontSize=10;fontStyle=1;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="635" y="120" width="50" height="45" as="geometry"/>
+        </mxCell>
+
+        <!-- ARROWS — main flow -->
+        <mxCell id="a1" style="endArrow=block;endFill=1;html=1;strokeColor=#64748B;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="api" target="cw" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a1l" value="logs &amp;amp; metrics" style="edgeLabel;html=1;align=center;verticalAlign=bottom;resizable=0;points=[];fontSize=9;fontColor=#64748B;" vertex="1" connectable="0" parent="a1">
+          <mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry>
+        </mxCell>
+
+        <mxCell id="a2" style="endArrow=block;endFill=1;html=1;strokeColor=#EF4444;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="cw" target="sns" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a2l" value="alarm" style="edgeLabel;html=1;align=center;verticalAlign=bottom;resizable=0;points=[];fontSize=9;fontColor=#EF4444;" vertex="1" connectable="0" parent="a2">
+          <mxGeometry relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry>
+        </mxCell>
+
+        <mxCell id="a3" style="endArrow=block;endFill=1;html=1;strokeColor=#EF4444;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="sns" target="agent" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="a4" style="endArrow=block;endFill=1;html=1;strokeColor=#10B981;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="agent" target="issue" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a4l" value="files RCA" style="edgeLabel;html=1;align=center;verticalAlign=bottom;resizable=0;points=[];fontSize=9;fontColor=#10B981;" vertex="1" connectable="0" parent="a4">
+          <mxGeometry relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry>
+        </mxCell>
+
+        <!-- Vertical arrows to supporting boxes -->
+        <mxCell id="a5" style="endArrow=block;endFill=1;html=1;strokeColor=#CBD5E1;strokeWidth=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="api" target="ddb" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="a7" style="endArrow=block;endFill=1;html=1;strokeColor=#CBD5E1;strokeWidth=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="agent" target="bedrock" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a7l" value="reasoning" style="edgeLabel;html=1;align=left;verticalAlign=middle;resizable=0;points=[];fontSize=9;fontColor=#94A3B8;" vertex="1" connectable="0" parent="a7">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="5" as="offset"/></mxGeometry>
+        </mxCell>
+
+        <!-- Dashed arrows — agent queries back -->
+        <mxCell id="a8" style="endArrow=block;endFill=1;html=1;strokeColor=#8B5CF6;strokeWidth=1;dashed=1;dashPattern=8 4;exitX=0.15;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;curved=1;" edge="1" source="agent" target="cw" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a8l" value="queries evidence" style="edgeLabel;html=1;align=center;verticalAlign=top;resizable=0;points=[];fontSize=9;fontColor=#8B5CF6;fontStyle=2;" vertex="1" connectable="0" parent="a8">
+          <mxGeometry x="0.2" relative="1" as="geometry"><mxPoint y="8" as="offset"/></mxGeometry>
+        </mxCell>
+
+        <mxCell id="a9" style="endArrow=block;endFill=1;html=1;strokeColor=#8B5CF6;strokeWidth=1;dashed=1;dashPattern=8 4;exitX=0.3;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;curved=1;" edge="1" source="agent" target="xray" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a9l" value="queries traces" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=9;fontColor=#8B5CF6;fontStyle=2;" vertex="1" connectable="0" parent="a9">
+          <mxGeometry relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry>
+        </mxCell>
+
+        <!-- Timing annotation -->
+        <mxCell id="time" value="End-to-end: alarm to filed RCA in 1–2 minutes" style="text;html=1;align=right;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=11;fontColor=#8B5CF6;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="850" y="420" width="280" height="30" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

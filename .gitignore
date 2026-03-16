@@ -1,0 +1,35 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+terraform/terraform.tfvars
+
+# Compiled binaries
+/bin/
+demo-order-api/api
+
+# Generated slides
+slides/deck.pptx
+slides/deck.html
+
+# Python
+__pycache__/
+*.pyc
+
+# Environment
+.env
+.env.local
+!.env.example
+
+# OS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Claude Code
+.claude/

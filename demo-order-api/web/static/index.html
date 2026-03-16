@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Order API</title>
+	<link rel="stylesheet" href="/static/style.css">
+	<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body x-data="app()" x-init="init()">
+
+	<header>
+		<h1>Order API</h1>
+		<div class="health-status">
+			<span class="health-dot" :class="health"></span>
+			<span x-text="health === 'ok' ? 'Healthy' : health === 'err' ? 'Unhealthy' : 'Checking…'"></span>
+		</div>
+	</header>
+
+	<main>
+		<nav class="tabs">
+			<button :class="{ active: tab === 'create' }" @click="tab = 'create'">Create Order</button>
+			<button :class="{ active: tab === 'list' }" @click="tab = 'list'; fetchOrders()">Orders</button>
+			<button :class="{ active: tab === 'lookup' }" @click="tab = 'lookup'">Look Up</button>
+		</nav>
+
+		<!-- Create Order -->
+		<div x-show="tab === 'create'" x-cloak>
+			<div class="card">
+				<template x-if="createMsg">
+					<div class="msg" :class="createOk ? 'msg-success' : 'msg-error'" x-text="createMsg"></div>
+				</template>
+
+				<template x-for="(item, i) in items" :key="i">
+					<div class="form-row">
+						<div>
+							<label x-show="i === 0">Item Name</label>
+							<input type="text" x-model="item.name" placeholder="e.g. Widget">
+						</div>
+						<div>
+							<label x-show="i === 0">Qty</label>
+							<input type="number" x-model.number="item.quantity" min="1" placeholder="1">
+						</div>
+						<div style="display:flex;gap:0.5rem;align-items:end">
+							<div style="flex:1">
+								<label x-show="i === 0">Price (£)</label>
+								<input type="number" x-model.number="item.unit_price" min="0" step="0.01" placeholder="9.99">
+							</div>
+							<button class="btn-icon" @click="items.splice(i, 1)" x-show="items.length > 1" title="Remove item">&times;</button>
+						</div>
+					</div>
+				</template>
+
+				<button class="btn btn-secondary btn-sm mb-1" @click="items.push({name:'', quantity:1, unit_price:0})">+ Add Item</button>
+
+				<div class="form-group">
+					<label>Discount Code</label>
+					<select x-model="discountCode">
+						<option value="">None</option>
+						<option value="SAVE5">SAVE5 (5%)</option>
+						<option value="SAVE10">SAVE10 (10%)</option>
+						<option value="SAVE15">SAVE15 (15%)</option>
+						<option value="WELCOME">WELCOME</option>
+					</select>
+				</div>
+
+				<button class="btn btn-primary" @click="createOrder()" :disabled="creating">
+					<span x-text="creating ? 'Creating…' : 'Create Order'"></span>
+				</button>
+			</div>
+		</div>
+
+		<!-- List Orders -->
+		<div x-show="tab === 'list'" x-cloak>
+			<div class="filter-bar">
+				<select x-model="statusFilter" @change="fetchOrders()">
+					<option value="">All statuses</option>
+					<option value="confirmed">Confirmed</option>
+					<option value="refunded">Refunded</option>
+					<option value="pending">Pending</option>
+				</select>
+				<button class="btn btn-secondary btn-sm" @click="fetchOrders()">Refresh</button>
+				<span class="count" x-text="orders.length + ' order' + (orders.length !== 1 ? 's' : '')"></span>
+			</div>
+
+			<template x-if="listMsg">
+				<div class="msg msg-error" x-text="listMsg"></div>
+			</template>
+
+			<div class="card" style="padding:0;overflow:hidden" x-show="orders.length > 0">
+				<table>
+					<thead>
+						<tr>
+							<th>ID</th>
+							<th>Items</th>
+							<th>Total</th>
+							<th>Status</th>
+							<th>Created</th>
+						</tr>
+					</thead>
+					<tbody>
+						<template x-for="o in orders" :key="o.id">
+							<tr class="clickable" @click="viewOrder(o.id)">
+								<td class="mono" x-text="o.id.slice(0,8) + '…'"></td>
+								<td x-text="o.items.length + ' item' + (o.items.length !== 1 ? 's' : '')"></td>
+								<td x-text="'£' + o.total.toFixed(2)"></td>
+								<td><span class="badge" :class="'badge-' + o.status" x-text="o.status"></span></td>
+								<td class="text-muted" x-text="new Date(o.created_at).toLocaleString('en-GB', {dateStyle:'short', timeStyle:'short'})"></td>
+							</tr>
+						</template>
+					</tbody>
+				</table>
+			</div>
+
+			<p class="text-muted" x-show="orders.length === 0 && !listMsg" style="text-align:center;padding:2rem">No orders found.</p>
+		</div>
+
+		<!-- Look Up / Detail -->
+		<div x-show="tab === 'lookup'" x-cloak>
+			<div class="card" x-show="!detail">
+				<div class="form-group">
+					<label>Order ID</label>
+					<input type="text" x-model="lookupId" placeholder="Enter full UUID" @keydown.enter="lookupOrder()">
+				</div>
+				<button class="btn btn-primary" @click="lookupOrder()" :disabled="lookingUp">
+					<span x-text="lookingUp ? 'Fetching…' : 'Look Up'"></span>
+				</button>
+				<template x-if="lookupMsg">
+					<div class="msg msg-error mt-1" x-text="lookupMsg"></div>
+				</template>
+			</div>
+
+			<template x-if="detail">
+				<div class="card">
+					<div class="detail-header">
+						<button class="btn btn-secondary btn-sm" @click="detail = null">&larr; Back</button>
+						<h2>Order Detail</h2>
+					</div>
+
+					<div class="detail-grid">
+						<div class="detail-field">
+							<label>Order ID</label>
+							<div class="value mono" x-text="detail.id"></div>
+						</div>
+						<div class="detail-field">
+							<label>Status</label>
+							<div class="value"><span class="badge" :class="'badge-' + detail.status" x-text="detail.status"></span></div>
+						</div>
+						<div class="detail-field">
+							<label>Created</label>
+							<div class="value" x-text="new Date(detail.created_at).toLocaleString('en-GB')"></div>
+						</div>
+						<div class="detail-field">
+							<label>Updated</label>
+							<div class="value" x-text="new Date(detail.updated_at).toLocaleString('en-GB')"></div>
+						</div>
+						<div class="detail-field" x-show="detail.discount_code">
+							<label>Discount Code</label>
+							<div class="value mono" x-text="detail.discount_code"></div>
+						</div>
+					</div>
+
+					<div class="items-table">
+						<h3>Items</h3>
+						<table>
+							<thead>
+								<tr>
+									<th>Name</th>
+									<th class="text-right">Qty</th>
+									<th class="text-right">Unit Price</th>
+									<th class="text-right">Line Total</th>
+								</tr>
+							</thead>
+							<tbody>
+								<template x-for="item in detail.items" :key="item.name">
+									<tr>
+										<td x-text="item.name"></td>
+										<td class="text-right" x-text="item.quantity"></td>
+										<td class="text-right" x-text="'£' + item.unit_price.toFixed(2)"></td>
+										<td class="text-right" x-text="'£' + (item.quantity * item.unit_price).toFixed(2)"></td>
+									</tr>
+								</template>
+							</tbody>
+						</table>
+					</div>
+
+					<div style="max-width:280px;margin-left:auto;margin-top:1rem">
+						<div class="summary-row">
+							<span>Subtotal</span>
+							<span x-text="'£' + detail.subtotal.toFixed(2)"></span>
+						</div>
+						<div class="summary-row" x-show="detail.discount_amount > 0">
+							<span>Discount</span>
+							<span x-text="'-£' + detail.discount_amount.toFixed(2)"></span>
+						</div>
+						<div class="summary-row total">
+							<span>Total</span>
+							<span x-text="'£' + detail.total.toFixed(2)"></span>
+						</div>
+					</div>
+
+					<div class="mt-1" style="text-align:right" x-show="detail.status === 'confirmed'">
+						<button class="btn btn-danger" @click="refundOrder(detail.id)" :disabled="refunding">
+							<span x-text="refunding ? 'Processing…' : 'Refund Order'"></span>
+						</button>
+					</div>
+
+					<template x-if="detailMsg">
+						<div class="msg mt-1" :class="detailOk ? 'msg-success' : 'msg-error'" x-text="detailMsg"></div>
+					</template>
+				</div>
+			</template>
+		</div>
+	</main>
+
+	<script src="/static/app.js"></script>
+</body>
+</html>
