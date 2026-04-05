@@ -42,30 +42,34 @@ Every time the user asks to run the demo, gather configuration first, then deplo
 
 ### Step 0: Gather configuration
 
-Use AskUserQuestion to confirm each setting. If `.env` already exists, show the current value as the default. Always ask — never silently reuse old config.
+Use AskUserQuestion to confirm each setting. Always ask — never silently reuse old config.
+
+**AskUserQuestion format:** For every question, read `.env` first. If it exists and contains a value for the setting being asked, include that value as the first option labelled with the current value (e.g. `label: "jk563/demo-incident-response"`, `description: "Current .env value"`). The user can always select "Other" (added automatically) to provide a free-text value. For AWS region, always offer `eu-west-2 (London)` as the recommended default regardless of `.env`.
 
 1. **Ask for the Git repository URL** — e.g. `https://github.com/org/repo` or `https://gitlab.example.com/group/project`
 2. **Auto-detect from the URL:**
    - `GIT_PROVIDER`: `github` if the host is `github.com`, otherwise `gitlab`
    - `GIT_REPO`: for GitHub extract `org/repo`; for GitLab extract the project path or ask for the numeric project ID
    - `GITLAB_URL`: set to `https://{host}` if not `github.com` or `gitlab.com` (for self-hosted GitLab)
-3. **Ask for AWS details** (with these defaults):
-   - AWS region (default: `eu-west-2`)
-   - AWS CLI profile name (default: empty)
+3. **Ask for AWS details** — one AskUserQuestion call with up to 4 questions at a time:
+   - AWS region (always offer `eu-west-2 (London)` as recommended default)
+   - AWS CLI profile name
    - Route53 hosted zone (e.g. `example.com`)
    - Subdomain (e.g. `demo.example.com`, default: `demo.{zone}`)
+   Then a second call for:
    - Terraform state S3 bucket name
-4. **Ask for the PAT** — explain the required scopes for the detected provider:
-   - GitHub: fine-grained PAT with Issues (rw), Contents (rw)
-   - GitLab: project access token with `api` scope
-5. **Write `.env`** — all runtime env vars (see `.env.example`). `APP_DOMAIN` is always `orders.{subdomain}`. Terraform variables are auto-generated from `.env` at deploy time.
-6. **Store the PAT** — run `scripts/update-git-pat.sh` with the provided token
-7. **Initialise Terraform** (first time only) — run `just tf-init`
+4. **Write `.env`** — all runtime env vars (see `.env.example`). `APP_DOMAIN` is always `orders.{subdomain}`. Terraform variables are auto-generated from `.env` at deploy time.
+5. **Initialise Terraform** (first time only) — run `just tf-init`
+
+**Do not ask for the Git PAT yet.** Secrets Manager is created by Terraform, so the PAT cannot be stored until after the first deploy.
 
 ### Step 1–8: Run the demo
 
 1. `just deploy` — applies Terraform (auto-generates tfvars from `.env`), seeds DynamoDB, and runs preflight checks.
-2. Verify all 7 preflight checks pass, including the Git PAT. If the PAT is missing or expired, run `just update-pat`.
+2. **Ask for the PAT now** (Secrets Manager exists after deploy). Explain required scopes for the detected provider:
+   - GitHub: fine-grained PAT with Issues (rw), Contents (rw)
+   - GitLab: project access token with `api` scope
+   Store it with `scripts/update-git-pat.sh`, then re-run `just preflight` to verify all 7 checks pass. If the PAT check still fails, ask the user to provide a new one.
 3. Open browser tabs: App UI (`https://${APP_DOMAIN}`), CloudWatch Dashboard, Issues page.
 4. `just steady` — start baseline traffic. **Must be running before inject** so the dashboard shows a healthy baseline for contrast.
 5. `just inject` — sends WELCOME discount code requests that trigger the index-out-of-range panic.
