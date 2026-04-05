@@ -79,9 +79,13 @@ Use AskUserQuestion to confirm each setting. Always ask — never silently reuse
 
 ### Post-demo cleanup
 
-After the demo completes, ask the user whether they want to:
-- **Delete created issues** — list any issues created during the demo and offer to close/delete them.
-- **Tear down infrastructure** — run `just tf-destroy` to remove all AWS resources and avoid ongoing costs.
+After the demo completes, use AskUserQuestion to confirm which cleanup actions the user wants (multiSelect: true):
+
+1. **Delete created issues** — list any issues created during the demo (query GitHub for issues created in the last 10 minutes). If the user selects this, fetch each issue and delete it with `gh issue delete -R {repo} {number} --yes`.
+
+2. **Tear down infrastructure** — run `AWS_PROFILE=jk terraform -chdir=terraform destroy -auto-approve` to remove all AWS resources and avoid ongoing costs.
+
+Format the question as a multiSelect with both options available, so users can choose one, both, or neither.
 
 ### Behavioural notes
 
