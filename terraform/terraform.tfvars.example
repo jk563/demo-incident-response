@@ -1,5 +1,0 @@
-aws_region   = "eu-west-2"
-route53_zone = "example.com"
-subdomain    = "demo.example.com"
-git_provider = "github"
-git_repo     = "your-org/demo-incident-response"

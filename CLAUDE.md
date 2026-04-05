@@ -24,7 +24,7 @@ Automated incident response demo: a Go order API on ECS Fargate experiences a re
 
 ## AWS
 
-All environment-specific values (region, profile, domain, state bucket) are in `.env` (gitignored). See `.env.example` for the required keys. Terraform variables are in `terraform/terraform.tfvars` (also gitignored). See `terraform/terraform.tfvars.example`.
+All environment-specific values (region, profile, domain, state bucket) are in `.env` (gitignored). See `.env.example` for the required keys. Terraform variables are auto-generated from `.env` by `just gen-tfvars` (called automatically before `tf-plan` and `tf-apply`).
 
 ## Conventions
 
@@ -36,9 +36,13 @@ All environment-specific values (region, profile, domain, state bucket) are in `
 - Python agent code: Python 3.12, strands-agents SDK, boto3
 - Go code: standard library where possible, `chi` router for HTTP
 
-## First-Time Setup
+## Demo Workflow
 
-When a user wants to set up this demo for the first time (or point it at a different repo), use AskUserQuestion to gather the required information interactively, then write `.env` and `terraform/terraform.tfvars`. The flow:
+Every time the user asks to run the demo, gather configuration first, then deploy and run. This ensures config is never stale.
+
+### Step 0: Gather configuration
+
+Use AskUserQuestion to confirm each setting. If `.env` already exists, show the current value as the default. Always ask — never silently reuse old config.
 
 1. **Ask for the Git repository URL** — e.g. `https://github.com/org/repo` or `https://gitlab.example.com/group/project`
 2. **Auto-detect from the URL:**
@@ -54,20 +58,13 @@ When a user wants to set up this demo for the first time (or point it at a diffe
 4. **Ask for the PAT** — explain the required scopes for the detected provider:
    - GitHub: fine-grained PAT with Issues (rw), Contents (rw)
    - GitLab: project access token with `api` scope
-5. **Write the config files:**
-   - `.env` — all runtime env vars (see `.env.example`)
-   - `terraform/terraform.tfvars` — all Terraform input variables (see `terraform/terraform.tfvars.example`)
-   - `APP_DOMAIN` is always `orders.{subdomain}`
+5. **Write `.env`** — all runtime env vars (see `.env.example`). `APP_DOMAIN` is always `orders.{subdomain}`. Terraform variables are auto-generated from `.env` at deploy time.
 6. **Store the PAT** — run `scripts/update-git-pat.sh` with the provided token
-7. **Initialise Terraform** — run `just tf-init`
+7. **Initialise Terraform** (first time only) — run `just tf-init`
 
-After setup, the user can run `just deploy` to bring everything up.
+### Step 1–8: Run the demo
 
-## Demo Workflow
-
-Quick-reference for running the demo end-to-end:
-
-1. `just deploy` — applies Terraform, seeds DynamoDB, and runs preflight checks (all three in one command).
+1. `just deploy` — applies Terraform (auto-generates tfvars from `.env`), seeds DynamoDB, and runs preflight checks.
 2. Verify all 7 preflight checks pass, including the Git PAT. If the PAT is missing or expired, run `just update-pat`.
 3. Open browser tabs: App UI (`https://${APP_DOMAIN}`), CloudWatch Dashboard, Issues page.
 4. `just steady` — start baseline traffic. **Must be running before inject** so the dashboard shows a healthy baseline for contrast.
@@ -75,6 +72,12 @@ Quick-reference for running the demo end-to-end:
 6. Watch the CloudWatch dashboard — error rate climbs, alarm fires within ~90 seconds.
 7. `just tail-agent` — watch the triage agent gather evidence and write the RCA.
 8. Check Issues for the new issue with root-cause analysis.
+
+### Post-demo cleanup
+
+After the demo completes, ask the user whether they want to:
+- **Delete created issues** — list any issues created during the demo and offer to close/delete them.
+- **Tear down infrastructure** — run `just tf-destroy` to remove all AWS resources and avoid ongoing costs.
 
 ### Behavioural notes
 

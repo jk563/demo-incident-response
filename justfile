@@ -8,12 +8,18 @@ tf-init:
         -backend-config="region=${AWS_REGION}" \
         ${AWS_PROFILE:+-backend-config="profile=${AWS_PROFILE}"}
 
+# Generate terraform.tfvars from .env
+gen-tfvars:
+    @printf 'aws_region   = "%s"\nroute53_zone = "%s"\nsubdomain    = "%s"\ngit_provider = "%s"\ngit_repo     = "%s"\ngitlab_url   = "%s"\n' \
+        "${AWS_REGION}" "${ROUTE53_ZONE}" "${SUBDOMAIN}" "${GIT_PROVIDER}" "${GIT_REPO}" "${GITLAB_URL:-https://gitlab.com}" \
+        > terraform/terraform.tfvars
+
 # Show Terraform execution plan
-tf-plan:
+tf-plan: gen-tfvars
     cd terraform && terraform plan
 
 # Apply Terraform changes to AWS (interactive approval)
-tf-apply *FLAGS:
+tf-apply *FLAGS: gen-tfvars
     cd terraform && terraform apply {{FLAGS}}
 
 # Destroy all Terraform-managed infrastructure (interactive approval)
