@@ -44,7 +44,7 @@ Every time the user asks to run the demo, gather configuration first, then deplo
 
 Use AskUserQuestion to confirm each setting. Always ask — never silently reuse old config.
 
-**AskUserQuestion format:** For every question, read `.env` first. If it exists and contains a value for the setting being asked, include that value as the first option labelled with the current value (e.g. `label: "jk563/demo-incident-response"`, `description: "Current .env value"`). The user can always select "Other" (added automatically) to provide a free-text value. For AWS region, always offer `eu-west-2 (London)` as the recommended default regardless of `.env`.
+**AskUserQuestion format:** For every question, read `.env` first. If it exists and contains a value for the setting being asked, include that value as the first option labelled with the current value (e.g. `label: "example/demo-incident-response"`, `description: "Current .env value"`). The user can always select "Other" (added automatically) to provide a free-text value. For AWS region, always offer `eu-west-2 (London)` as the recommended default regardless of `.env`.
 
 1. **Ask for the Git repository URL** — e.g. `https://github.com/org/repo` or `https://gitlab.example.com/group/project`
 2. **Auto-detect from the URL:**
@@ -83,7 +83,7 @@ After the demo completes, use AskUserQuestion to confirm which cleanup actions t
 
 1. **Delete created issues** — list any issues created during the demo (query GitHub for issues created in the last 10 minutes). If the user selects this, fetch each issue and delete it with `gh issue delete -R {repo} {number} --yes`.
 
-2. **Tear down infrastructure** — run `AWS_PROFILE=jk terraform -chdir=terraform destroy -auto-approve` to remove all AWS resources and avoid ongoing costs.
+2. **Tear down infrastructure** — run with the given AWS profile `terraform -chdir=terraform destroy -auto-approve` to remove all AWS resources and avoid ongoing costs.
 
 Format the question as a multiSelect with both options available, so users can choose one, both, or neither.
 
