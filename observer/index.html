@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Agent Observer</title>
+	<link rel="stylesheet" href="style.css">
+	<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body x-data="observer()" x-init="init()">
+
+	<header>
+		<div class="header-left">
+			<button class="btn btn-secondary btn-sm btn-back" x-show="view === 'detail'" @click="goHome()" x-cloak>&larr; Runs</button>
+			<h1>Agent Observer</h1>
+		</div>
+		<div class="header-right" x-show="view === 'detail'" x-cloak>
+			<div class="incident-picker" x-show="incidents.length > 0" x-cloak>
+				<select @change="selectIncident($event.target.value)">
+					<template x-for="inc in incidents" :key="inc.incident_id">
+						<option :value="inc.incident_id" :selected="inc.incident_id === incidentId"
+							x-text="incidentLabel(inc)"></option>
+					</template>
+				</select>
+			</div>
+			<span class="elapsed" x-show="incidentId" x-text="elapsed" x-cloak></span>
+			<span class="status-indicator" :class="statusClass">
+				<span class="status-dot"></span>
+				<span x-text="statusText"></span>
+			</span>
+			<button class="btn btn-secondary btn-sm" @click="watchLatest()">Watch live</button>
+		</div>
+	</header>
+
+	<main>
+		<!-- Home view: run list -->
+		<div class="home-view" x-show="view === 'home'">
+			<div class="run-list" x-show="incidents.length > 0">
+				<template x-for="inc in incidents" :key="inc.incident_id">
+					<div class="run-card" :class="{ 'run-card-live': inc.incident_id === liveIncidentId }" @click="openRun(inc.incident_id)">
+						<div class="run-card-left">
+							<span class="run-dot" :class="inc.incident_id === liveIncidentId ? 'run-dot-live' : 'run-dot-complete'"></span>
+							<div class="run-card-info">
+								<span class="run-card-name" x-text="cleanAlarmName(inc.alarm_name)"></span>
+								<span class="run-card-time" x-text="new Date(inc.started_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })"></span>
+							</div>
+						</div>
+						<div class="run-card-right">
+							<span class="run-status" :class="inc.incident_id === liveIncidentId ? 'run-status-live' : 'run-status-complete'" x-text="inc.incident_id === liveIncidentId ? 'Investigating' : 'Complete'"></span>
+							<span class="run-time" x-text="relativeTime(inc.started_at)"></span>
+						</div>
+					</div>
+				</template>
+			</div>
+			<div class="empty-state" x-show="incidents.length === 0">
+				<div class="empty-state-icon">&#9678;</div>
+				<p class="empty-state-title">No agent runs yet</p>
+				<p class="empty-state-subtitle">Waiting for the first CloudWatch alarm to trigger the triage agent.</p>
+			</div>
+		</div>
+
+		<!-- Detail view: split layout -->
+		<div class="split" x-show="view === 'detail'" x-cloak>
+
+			<!-- Left: Tool timeline -->
+			<div class="pane pane-tools">
+				<div class="pane-header">
+					<h2>Tools</h2>
+					<span class="step-count" x-show="toolCount > 0" x-text="toolCountLabel"></span>
+				</div>
+				<div class="pane-body">
+
+				<!-- Complete banner -->
+				<div class="complete-block" x-show="completed">
+					<span class="complete-icon">&#10003;</span>
+					<span>Investigation complete</span>
+				</div>
+
+				<template x-for="step in toolSteps" :key="step.seq">
+					<div class="tool-card" :class="{ 'tool-card-active': !step.completed }">
+						<div class="tool-card-header">
+							<div class="tool-icon">
+								<template x-if="!step.completed">
+									<span class="spinner"></span>
+								</template>
+								<template x-if="step.completed">
+									<span class="tick">&#10003;</span>
+								</template>
+							</div>
+							<div class="tool-info">
+								<span class="tool-label" x-text="toolLabel(step.detail.tool)"></span>
+								<span class="tool-name" x-text="step.detail.tool"></span>
+							</div>
+							<div class="tool-meta">
+								<span class="tool-duration" x-show="step.duration_s" x-text="step.duration_s + 's'"></span>
+								<span class="tool-time" x-text="formatTime(step.timestamp)"></span>
+								<a class="tool-link" x-show="toolLink(step)" :href="toolLink(step)" target="_blank" title="Open in console">&#8599;</a>
+							</div>
+						</div>
+						<div class="tool-card-body" x-show="step.input || step.result">
+							<!-- query_logs: show query in a styled code block -->
+							<template x-if="step.detail.tool === 'query_logs' && step.input && step.input.query">
+								<div class="query-block">
+									<div class="query-block-header">
+										<span class="param-key" style="margin:0">query</span>
+										<div class="query-actions">
+											<a class="query-action" :href="queryLink(step.input.query)" target="_blank" title="Open in CloudWatch Logs Insights">Open in console &#8599;</a>
+											<button class="query-action" @click="copyToClipboard(step.input.query, $event)" title="Copy query">Copy</button>
+										</div>
+									</div>
+									<pre class="query-code"><code x-text="step.input.query"></code></pre>
+									<!-- Show non-query params below -->
+									<template x-for="(val, key) in (step.input || {})" :key="key">
+										<template x-if="key !== 'query'">
+											<div class="tool-param">
+												<span class="param-key" x-text="key"></span>
+												<span class="param-val" x-text="formatParam(val)"></span>
+											</div>
+										</template>
+									</template>
+								</div>
+							</template>
+							<!-- Other tools: standard param display -->
+							<template x-if="!(step.detail.tool === 'query_logs' && step.input && step.input.query)">
+								<div>
+									<template x-for="(val, key) in (step.input || {})" :key="key">
+										<div class="tool-param" x-data="{ expanded: false }">
+											<span class="param-key" x-text="key"></span>
+											<template x-if="isLongParam(val)">
+												<span class="param-val">
+													<span x-show="!expanded" x-text="truncateParam(val)"></span>
+													<span x-show="expanded" x-text="formatParam(val)"></span>
+													<a href="#" class="read-more" @click.prevent="expanded = !expanded" x-text="expanded ? 'show less' : 'read more…'"></a>
+												</span>
+											</template>
+											<template x-if="!isLongParam(val)">
+												<span class="param-val" x-text="formatParam(val)"></span>
+											</template>
+										</div>
+									</template>
+								</div>
+							</template>
+							<!-- Tool results -->
+							<template x-if="step.result && step.detail.tool === 'describe_alarm'">
+								<div class="tool-result">
+									<span class="result-chip" :class="step.result.state === 'ALARM' ? 'chip-alarm' : 'chip-ok'" x-text="step.result.state"></span>
+									<template x-if="step.result.threshold">
+										<span class="result-detail">Threshold: <strong x-text="step.result.threshold + '%'"></strong></span>
+									</template>
+								</div>
+							</template>
+							<template x-if="step.result && step.detail.tool === 'query_logs'">
+								<div class="tool-result">
+									<span class="result-detail" x-text="step.result.match_count + ' match' + (step.result.match_count !== 1 ? 'es' : '')"></span>
+								</div>
+							</template>
+							<template x-if="step.result && step.detail.tool === 'get_metric_data' && step.result.metrics">
+								<div class="tool-result tool-result-metrics">
+									<template x-for="(m, mid) in step.result.metrics" :key="mid">
+										<span class="metric-chip">
+											<span class="metric-label" x-text="m.label || mid"></span>
+											<span class="metric-value" x-text="'peak ' + (Number(m.max) % 1 === 0 ? m.max : Number(m.max).toFixed(1))"></span>
+										</span>
+									</template>
+								</div>
+							</template>
+							<template x-if="step.result && step.detail.tool === 'get_xray_traces' && step.result.trace_ids">
+								<div class="tool-result">
+									<span class="result-label">Traces:</span>
+									<div class="trace-list">
+										<template x-for="tid in step.result.trace_ids" :key="tid">
+											<a class="trace-id" :href="`https://${new URLSearchParams(window.location.search).get('region') || 'eu-west-2'}.console.aws.amazon.com/xray/home?region=${new URLSearchParams(window.location.search).get('region') || 'eu-west-2'}#/traces/${tid}`" target="_blank" x-text="tid.split('-').pop().slice(0,12) + '…'"></a>
+										</template>
+									</div>
+								</div>
+							</template>
+							<template x-if="step.result && step.detail.tool === 'get_source_file'">
+								<div class="tool-result">
+									<template x-if="step.result.status === 'ok'">
+										<span class="result-detail" x-text="step.result.lines + ' lines'"></span>
+									</template>
+									<template x-if="step.result.status === 'not_found'">
+										<span class="result-detail result-warn">Not found</span>
+									</template>
+								</div>
+							</template>
+							<template x-if="step.result && step.detail.tool === 'create_issue' && step.result.issue_url">
+								<div class="tool-result">
+									<span class="result-label">Created:</span>
+									<a class="issue-link-inline" :href="step.result.issue_url" target="_blank" x-text="'#' + step.result.issue_number"></a>
+								</div>
+							</template>
+						</div>
+						<!-- Issue link for create_issue -->
+						<div class="tool-card-footer" x-show="step.detail.tool === 'create_issue' && issueUrl">
+							<a :href="issueUrl" target="_blank" class="issue-link">View issue &rarr;</a>
+						</div>
+					</div>
+				</template>
+				</div>
+			</div>
+
+			<!-- Right: Agent output -->
+			<div class="pane pane-output">
+				<div class="pane-header">
+					<h2>Agent Output</h2>
+				</div>
+				<div class="pane-body">
+					<div class="output-body prose" x-html="renderedMarkdown"></div>
+					<div class="output-cursor" x-show="!completed"></div>
+				</div>
+			</div>
+		</div>
+	</main>
+
+	<script src="app.js"></script>
+</body>
+</html>

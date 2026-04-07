@@ -9,6 +9,15 @@ import boto3
 import requests
 from strands import tool
 
+# Optional observer callback for emitting tool results.
+_observer_callback = None
+
+
+def set_observer_callback(cb):
+    """Set the observer callback handler so tools can emit result data."""
+    global _observer_callback
+    _observer_callback = cb
+
 # Shared boto3 clients — created once, reused across warm invocations.
 _cw_client = boto3.client("cloudwatch")
 _logs_client = boto3.client("logs")
@@ -59,6 +68,13 @@ def describe_alarm() -> dict:
         return {"error": f"Alarm '{ALARM_NAME}' not found"}
 
     alarm = alarms[0]
+
+    if _observer_callback:
+        _observer_callback.set_tool_result("describe_alarm", {
+            "state": alarm.get("StateValue"),
+            "threshold": alarm.get("Threshold"),
+        })
+
     return {
         "alarm_name": alarm.get("AlarmName"),
         "alarm_description": alarm.get("AlarmDescription"),
@@ -122,6 +138,9 @@ def query_logs(query: str, minutes_ago: int = 15) -> dict:
         row = {field["field"]: field["value"] for field in entry if not field["field"].startswith("@ptr")}
         rows.append(row)
 
+    if _observer_callback:
+        _observer_callback.set_tool_result("query_logs", {"match_count": len(rows)})
+
     return {
         "status": "Complete",
         "match_count": len(rows),
@@ -173,14 +192,26 @@ def get_metric_data(metric_queries: list[dict], minutes_ago: int = 30) -> dict:
 
     results = {}
     for series in resp.get("MetricDataResults", []):
+        values = series.get("Values", [])
         results[series["Id"]] = {
             "label": series.get("Label"),
             "values": [
                 {"timestamp": ts.isoformat(), "value": val}
-                for ts, val in zip(series.get("Timestamps", []), series.get("Values", []))
+                for ts, val in zip(series.get("Timestamps", []), values)
             ],
             "status_code": series.get("StatusCode"),
         }
+
+    if _observer_callback:
+        metrics_summary = {
+            mid: {
+                "label": m["label"],
+                "data_points": len(m["values"]),
+                "max": max((v["value"] for v in m["values"]), default=0),
+            }
+            for mid, m in results.items()
+        }
+        _observer_callback.set_tool_result("get_metric_data", {"metrics": metrics_summary})
 
     return results
 
@@ -241,11 +272,16 @@ def get_xray_traces(minutes_ago: int = 15) -> dict:
             segments.append(segment_info)
         traces.append({"id": trace.get("Id"), "segments": segments})
 
-    return {
+    result = {
         "trace_count": len(summaries),
         "total_available": len(summaries),
         "traces": traces,
     }
+
+    if _observer_callback and trace_ids:
+        _observer_callback.set_tool_result("get_xray_traces", {"trace_ids": trace_ids})
+
+    return result
 
 
 @tool
@@ -273,9 +309,17 @@ def get_source_file(file_path: str) -> str:
     resp = requests.get(url, headers=headers, params={"ref": "main"}, timeout=10)
 
     if resp.status_code == 404:
+        if _observer_callback:
+            _observer_callback.set_tool_result("get_source_file", {"status": "not_found"})
         return f"File not found: {file_path}"
     resp.raise_for_status()
-    return resp.text
+    content = resp.text
+
+    if _observer_callback:
+        line_count = content.count("\n") + (1 if content and not content.endswith("\n") else 0)
+        _observer_callback.set_tool_result("get_source_file", {"lines": line_count, "status": "ok"})
+
+    return content
 
 
 @tool
@@ -310,5 +354,11 @@ def create_issue(title: str, body: str, labels: list[str] | None = None) -> dict
 
     issue = resp.json()
     if GIT_PROVIDER == "gitlab":
-        return {"issue_number": issue["iid"], "url": issue["web_url"]}
-    return {"issue_number": issue["number"], "url": issue["html_url"]}
+        result = {"issue_number": issue["iid"], "url": issue["web_url"]}
+    else:
+        result = {"issue_number": issue["number"], "url": issue["html_url"]}
+
+    if _observer_callback:
+        _observer_callback.set_tool_result("create_issue", {"issue_url": result["url"], "issue_number": result["issue_number"]})
+
+    return result

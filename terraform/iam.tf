@@ -73,6 +73,15 @@ resource "aws_iam_role_policy" "ecs_task" {
         ]
         Resource = "*"
       },
+      {
+        Sid    = "DynamoDBAgentEvents"
+        Effect = "Allow"
+        Action = [
+          "dynamodb:GetItem",
+          "dynamodb:Query",
+        ]
+        Resource = aws_dynamodb_table.agent_events.arn
+      },
     ]
   })
 }
@@ -151,6 +160,14 @@ resource "aws_iam_role_policy" "lambda" {
           "arn:aws:bedrock:eu-*::foundation-model/*",
           "arn:aws:bedrock:eu-west-2:${data.aws_caller_identity.current.account_id}:inference-profile/*",
         ]
+      },
+      {
+        Sid    = "DynamoDBAgentEvents"
+        Effect = "Allow"
+        Action = [
+          "dynamodb:PutItem",
+        ]
+        Resource = aws_dynamodb_table.agent_events.arn
       },
       {
         Sid    = "SecretsManager"

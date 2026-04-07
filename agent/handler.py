@@ -3,12 +3,15 @@
 import json
 import logging
 import os
+import time
 from pathlib import Path
 
 from strands import Agent
 from strands.models.bedrock import BedrockModel
 
+from callback_handler import ObserverCallbackHandler
 from tools import (
+    set_observer_callback,
     create_issue,
     describe_alarm,
     get_metric_data,
@@ -31,11 +34,14 @@ model = BedrockModel(
     max_tokens=4096,
 )
 
+observer_callback = ObserverCallbackHandler()
+set_observer_callback(observer_callback)
+
 agent = Agent(
     model=model,
     system_prompt=SYSTEM_PROMPT,
     tools=[describe_alarm, query_logs, get_metric_data, get_xray_traces, get_source_file, create_issue],
-    callback_handler=None,
+    callback_handler=observer_callback,
 )
 
 
@@ -61,6 +67,11 @@ def handler(event, context):
 
     logger.info("Investigating alarm: %s (reason: %s)", alarm_name, reason)
 
+    # Set up observer for this invocation.
+    incident_id = f"{alarm_name}-{int(time.time())}"
+    observer_callback.set_incident_id(incident_id)
+    logger.info("Observer incident_id: %s", incident_id)
+
     prompt = (
         f"A CloudWatch alarm has fired.\n\n"
         f"**Alarm name:** {alarm_name}\n"
@@ -73,6 +84,7 @@ def handler(event, context):
 
     result = agent(prompt)
     output = str(result)
+    observer_callback.emit_complete()
 
     logger.info("Agent completed. Output length: %d chars", len(output))
 

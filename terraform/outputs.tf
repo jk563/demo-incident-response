@@ -42,3 +42,8 @@ output "dynamodb_table" {
   description = "DynamoDB table name"
   value       = aws_dynamodb_table.orders.name
 }
+
+output "events_table" {
+  description = "Agent events DynamoDB table name"
+  value       = aws_dynamodb_table.agent_events.name
+}

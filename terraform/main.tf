@@ -35,7 +35,8 @@ locals {
   container_port = 8080
   domain         = var.subdomain
   app_domain     = "orders.${local.domain}"
-  azs            = ["${var.aws_region}a", "${var.aws_region}b"]
+  events_table_name = "demo-agent-events"
+  azs               = ["${var.aws_region}a", "${var.aws_region}b"]
 
   common_tags = {
     Project   = local.project

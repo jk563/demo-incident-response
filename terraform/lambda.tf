@@ -16,7 +16,8 @@ resource "aws_lambda_function" "triage_agent" {
       GIT_SECRET_NAME  = aws_secretsmanager_secret.git_pat.name
       GITLAB_URL       = var.gitlab_url
       BEDROCK_MODEL    = var.bedrock_model
-      ALARM_NAME       = aws_cloudwatch_metric_alarm.error_rate.alarm_name
+      ALARM_NAME           = aws_cloudwatch_metric_alarm.error_rate.alarm_name
+      OBSERVER_TABLE_NAME  = aws_dynamodb_table.agent_events.name
     }
   }
 

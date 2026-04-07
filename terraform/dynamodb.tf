@@ -21,3 +21,27 @@ resource "aws_dynamodb_table" "orders" {
 
   tags = local.common_tags
 }
+
+resource "aws_dynamodb_table" "agent_events" {
+  name         = local.events_table_name
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "incident_id"
+  range_key    = "seq"
+
+  attribute {
+    name = "incident_id"
+    type = "S"
+  }
+
+  attribute {
+    name = "seq"
+    type = "N"
+  }
+
+  ttl {
+    attribute_name = "ttl"
+    enabled        = true
+  }
+
+  tags = local.common_tags
+}

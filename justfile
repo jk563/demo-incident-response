@@ -77,5 +77,10 @@ update-pat:
 test-e2e:
     cd test && TEST_TARGET="https://${APP_DOMAIN}" go test -v -count=1 ./...
 
+# Serve the observer UI locally
+observer:
+    @echo "Observer: http://localhost:9090?api=https://${APP_DOMAIN}&region=${AWS_REGION}&repo=${GIT_REPO}"
+    python3 -m http.server 9090 --directory observer
+
 # Full deploy: apply infrastructure, seed data, and run pre-flight checks
 deploy: (tf-apply "-auto-approve") seed preflight

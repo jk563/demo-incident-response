@@ -46,7 +46,7 @@ Use AskUserQuestion to confirm each setting. Always ask — never silently reuse
 
 **AskUserQuestion format:** For every question, read `.env` first. If it exists and contains a value for the setting being asked, include that value as the first option labelled with the current value (e.g. `label: "example/demo-incident-response"`, `description: "Current .env value"`). The user can always select "Other" (added automatically) to provide a free-text value. For AWS region, always offer `eu-west-2 (London)` as the recommended default regardless of `.env`.
 
-1. **Ask for the Git repository URL** — e.g. `https://github.com/org/repo` or `https://gitlab.example.com/group/project`
+1. **Ask for the Git repository URL** — this will need a free text response
 2. **Auto-detect from the URL:**
    - `GIT_PROVIDER`: `github` if the host is `github.com`, otherwise `gitlab`
    - `GIT_REPO`: for GitHub extract `org/repo`; for GitLab extract the project path or ask for the numeric project ID

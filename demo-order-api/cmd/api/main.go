@@ -11,13 +11,13 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"github.com/go-chi/chi/v5"
-	chimw "github.com/go-chi/chi/v5/middleware"
 	"github.com/example/demo-incident-response/demo-order-api/internal/handler"
 	"github.com/example/demo-incident-response/demo-order-api/internal/middleware"
 	"github.com/example/demo-incident-response/demo-order-api/internal/observability"
 	"github.com/example/demo-incident-response/demo-order-api/internal/store"
 	"github.com/example/demo-incident-response/demo-order-api/web"
+	"github.com/go-chi/chi/v5"
+	chimw "github.com/go-chi/chi/v5/middleware"
 )
 
 func main() {
@@ -47,6 +47,13 @@ func main() {
 	orderStore := store.New(ddbClient)
 	orders := handler.NewOrders(orderStore)
 
+	eventsTableName := os.Getenv("EVENTS_TABLE_NAME")
+	if eventsTableName == "" {
+		eventsTableName = "demo-agent-events"
+	}
+	eventStore := store.NewEventStore(ddbClient, eventsTableName)
+	events := handler.NewEvents(eventStore)
+
 	// Embedded frontend assets.
 	staticFS, err := fs.Sub(web.Assets, "static")
 	if err != nil {
@@ -67,6 +74,13 @@ func main() {
 	r.Get("/orders", orders.List)
 	r.Get("/orders/{id}", orders.Get)
 	r.Post("/orders/{id}/refund", orders.Refund)
+
+	r.Route("/api", func(api chi.Router) {
+		api.Use(middleware.CORS)
+		api.Get("/agent-events", events.List)
+		api.Get("/agent-events/latest", events.Latest)
+		api.Get("/agent-events/incidents", events.Incidents)
+	})
 
 	// Serve embedded frontend.
 	fileServer := http.FileServer(http.FS(staticFS))
