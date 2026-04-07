@@ -63,19 +63,20 @@ Use AskUserQuestion to confirm each setting. Always ask — never silently reuse
 
 **Do not ask for the Git PAT yet.** Secrets Manager is created by Terraform, so the PAT cannot be stored until after the first deploy.
 
-### Step 1–8: Run the demo
+### Step 1–9: Run the demo
 
 1. `just deploy` — applies Terraform (auto-generates tfvars from `.env`), seeds DynamoDB, and runs preflight checks.
 2. **Ask for the PAT now** (Secrets Manager exists after deploy). Explain required scopes for the detected provider:
    - GitHub: fine-grained PAT with Issues (rw), Contents (rw)
    - GitLab: project access token with `api` scope
    Store it with `scripts/update-git-pat.sh`, then re-run `just preflight` to verify all 7 checks pass. If the PAT check still fails, ask the user to provide a new one.
-3. Open browser tabs: App UI (`https://${APP_DOMAIN}`), CloudWatch Dashboard, Issues page.
-4. `just steady` — start baseline traffic. **Must be running before inject** so the dashboard shows a healthy baseline for contrast.
-5. `just inject` — sends WELCOME discount code requests that trigger the index-out-of-range panic.
-6. Watch the CloudWatch dashboard — error rate climbs, alarm fires within ~90 seconds.
-7. `just tail-agent` — watch the triage agent gather evidence and write the RCA.
-8. Check Issues for the new issue with root-cause analysis.
+3. Open browser tabs: App UI (`https://${APP_DOMAIN}`), CloudWatch Dashboard, Issues page, and Observer UI.
+4. **Start the Observer** — run `just observer` in a separate terminal. Open browser tab to http://localhost:9090 to watch the agent triage run in real-time.
+5. `just steady` — start baseline traffic. **Must be running before inject** so the dashboard shows a healthy baseline for contrast.
+6. `just inject` — sends WELCOME discount code requests that trigger the index-out-of-range panic.
+7. Watch the CloudWatch dashboard — error rate climbs, alarm fires within ~90 seconds.
+8. Watch the Observer UI — observe the triage agent gather evidence and write the RCA in real-time.
+9. Check Issues for the new issue with root-cause analysis.
 
 ### Post-demo cleanup
 
