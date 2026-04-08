@@ -9,6 +9,7 @@ The system comprises the following components:
 | Component | Technology | Purpose |
 |---|---|---|
 | **Order API** | Go on ECS Fargate | Order processing service at `orders.${SUBDOMAIN}`, with an intentional bug |
+| **Observer UI** | Alpine.js SPA (embedded in Go binary) | Real-time view of agent triage runs at `observer.${SUBDOMAIN}` |
 | **DynamoDB** | On-demand table | Orders storage (partition key `id`, GSI `status-index`) |
 | **Traffic Generator** | Two Go binaries | `steady` (happy-path codes at ~10 req/s) and `inject` (buggy code at ~5 req/s) |
 | **CloudWatch** | Logs, Metrics, Alarms, Dashboard | Structured JSON logs, custom metrics, metric filters, error-rate alarm |
@@ -27,11 +28,16 @@ graph TB
     end
 
     subgraph "Application Layer"
-        ALB["Application Load Balancer<br/>orders.${SUBDOMAIN}"]
+        ALB["Application Load Balancer<br/>*.${SUBDOMAIN}"]
         subgraph "ECS Fargate"
-            API["Go Order API"]
+            API["Go Order API<br/>(host-based routing)"]
         end
         DDB["DynamoDB<br/>Orders Table"]
+        EVENTS_DDB["DynamoDB<br/>Agent Events Table"]
+    end
+
+    subgraph "Observer"
+        OBS["Observer UI<br/>observer.${SUBDOMAIN}"]
     end
 
     subgraph "Observability"
@@ -66,6 +72,10 @@ graph TB
     LAMBDA --> CW_METRICS
     LAMBDA --> XRAY
     LAMBDA --> GH
+    LAMBDA --> EVENTS_DDB
+    OBS --> ALB
+    ALB --> API
+    API --> EVENTS_DDB
 ```
 
 ### Data Flow — Happy Path vs Failure Path
@@ -172,7 +182,7 @@ sequenceDiagram
 | **Agent model** | Configurable via Bedrock (default Sonnet 4.6 until tested) | Swappable at deploy time; Bedrock avoids API key management |
 | **Agent trigger** | CloudWatch Alarm → SNS → Lambda | Fully event-driven; no polling; standard AWS integration pattern |
 | **Traffic generator** | Two Go binaries: `steady` and `inject` | Compiled binaries for minimal overhead; separate binaries give precise control over demo timing |
-| **Frontend** | `go:embed` | Single binary ships static assets; no separate build step |
+| **Frontend** | `go:embed` | Single binary ships static assets (orders UI + observer SPA); host-based routing serves each on its own subdomain |
 | **Demo reset** | `terraform destroy` / `terraform apply` | Clean-room reproducibility; entire stack rebuilt in minutes |
 
 ## The Bug
@@ -273,6 +283,7 @@ X-Ray is configured with 100% sampling (appropriate for a demo, not for producti
 | **Account** | *(see `.env`)* |
 | **Domain** | `*.${SUBDOMAIN}` (Route 53 hosted zone + ACM certificate) |
 | **API endpoint** | `orders.${SUBDOMAIN}` |
+| **Observer endpoint** | `observer.${SUBDOMAIN}` |
 | **Terraform state** | `s3://${TF_STATE_BUCKET}` (key: `demo-incident-response/terraform.tfstate`) |
 | **ECR repositories** | `demo-order-api`, `demo-triage-agent` |
 | **CloudWatch namespace** | `DemoOrderAPI` |
