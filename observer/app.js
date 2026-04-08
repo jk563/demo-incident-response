@@ -1,9 +1,6 @@
 function observer() {
 	const params = new URLSearchParams(window.location.search);
 	const apiBase = (params.get('api') || '').replace(/\/$/, '');
-
-	const region = params.get('region') || 'eu-west-2';
-	const repo = params.get('repo') || '';
 	const logGroup = '/ecs/demo-order-api';
 
 	const TOOL_LABELS = {
@@ -16,6 +13,8 @@ function observer() {
 	};
 
 	return {
+		region: params.get('region') || 'eu-west-2',
+		repo: params.get('repo') || '',
 		view: 'home',
 		incidentId: null,
 		incidents: [],
@@ -70,7 +69,18 @@ function observer() {
 			}
 		},
 
-		init() {
+		async init() {
+			// When served from the observer subdomain (no query params), fetch config.
+			if (!params.has('api') && !params.has('region')) {
+				try {
+					const r = await fetch('/config');
+					if (r.ok) {
+						const cfg = await r.json();
+						if (cfg.region) this.region = cfg.region;
+						if (cfg.repo) this.repo = cfg.repo;
+					}
+				} catch { /* use defaults */ }
+			}
 			this.fetchIncidents();
 			this.incidentPolling = setInterval(() => this.fetchIncidents(), 5000);
 			this.startDiscovery();
@@ -326,29 +336,29 @@ function observer() {
 			const tool = step.detail.tool;
 			const input = step.input || {};
 			const result = step.result || {};
-			const base = `https://${region}.console.aws.amazon.com`;
+			const base = `https://${this.region}.console.aws.amazon.com`;
 
 			if (tool === 'describe_alarm') {
-				return `${base}/cloudwatch/home?region=${region}#alarmsV2:alarm/demo-incident-response-error-rate`;
+				return `${base}/cloudwatch/home?region=${this.region}#alarmsV2:alarm/demo-incident-response-error-rate`;
 			}
 			if (tool === 'query_logs' && input.query) {
 				const q = encodeURIComponent(input.query);
 				const lg = encodeURIComponent(logGroup);
-				return `${base}/cloudwatch/home?region=${region}#logsV2:logs-insights$3FqueryDetail$3D~(source~(~'${lg})~editorString~'${q})`;
+				return `${base}/cloudwatch/home?region=${this.region}#logsV2:logs-insights$3FqueryDetail$3D~(source~(~'${lg})~editorString~'${q})`;
 			}
 			if (tool === 'get_xray_traces') {
 				// Link to specific trace if we have trace IDs from the result.
 				if (result.trace_ids && result.trace_ids.length > 0) {
 					const traceId = result.trace_ids[0];
-					return `${base}/xray/home?region=${region}#/traces/${traceId}`;
+					return `${base}/xray/home?region=${this.region}#/traces/${traceId}`;
 				}
-				return `${base}/xray/home?region=${region}#/traces`;
+				return `${base}/xray/home?region=${this.region}#/traces`;
 			}
 			if (tool === 'get_metric_data') {
-				return `${base}/cloudwatch/home?region=${region}#metricsV2`;
+				return `${base}/cloudwatch/home?region=${this.region}#metricsV2`;
 			}
-			if (tool === 'get_source_file' && input.file_path && repo) {
-				return `https://github.com/${repo}/blob/main/${input.file_path}`;
+			if (tool === 'get_source_file' && input.file_path && this.repo) {
+				return `https://github.com/${this.repo}/blob/main/${input.file_path}`;
 			}
 			if (tool === 'create_issue' && result.issue_url) {
 				return result.issue_url;
@@ -358,10 +368,10 @@ function observer() {
 
 		queryLink(query) {
 			if (!query) return null;
-			const base = `https://${region}.console.aws.amazon.com`;
+			const base = `https://${this.region}.console.aws.amazon.com`;
 			const q = encodeURIComponent(query);
 			const lg = encodeURIComponent(logGroup);
-			return `${base}/cloudwatch/home?region=${region}#logsV2:logs-insights$3FqueryDetail$3D~(source~(~'${lg})~editorString~'${q})`;
+			return `${base}/cloudwatch/home?region=${this.region}#logsV2:logs-insights$3FqueryDetail$3D~(source~(~'${lg})~editorString~'${q})`;
 		},
 
 		async copyToClipboard(text, event) {

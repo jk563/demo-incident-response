@@ -3,6 +3,11 @@ output "app_url" {
   value       = "https://${local.app_domain}"
 }
 
+output "observer_url" {
+  description = "Observer UI URL"
+  value       = "https://${local.observer_domain}"
+}
+
 output "dashboard_url" {
   description = "CloudWatch dashboard URL"
   value       = "https://${data.aws_region.current.name}.console.aws.amazon.com/cloudwatch/home?region=${data.aws_region.current.name}#dashboards:name=${local.project}"

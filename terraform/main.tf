@@ -34,7 +34,8 @@ locals {
   namespace      = "DemoOrderAPI"
   container_port = 8080
   domain         = var.subdomain
-  app_domain     = "orders.${local.domain}"
+  app_domain      = "orders.${local.domain}"
+  observer_domain = "observer.${local.domain}"
   events_table_name = "demo-agent-events"
   azs               = ["${var.aws_region}a", "${var.aws_region}b"]
 

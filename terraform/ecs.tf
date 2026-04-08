@@ -62,6 +62,7 @@ resource "aws_ecs_task_definition" "app" {
       environment = [
         { name = "AWS_XRAY_DAEMON_ADDRESS", value = "localhost:2000" },
         { name = "EVENTS_TABLE_NAME", value = "${local.events_table_name}" },
+        { name = "GIT_REPO", value = var.git_repo },
       ]
 
       logConfiguration = {

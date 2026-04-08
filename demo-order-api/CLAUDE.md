@@ -4,12 +4,21 @@ Go order processing service for the automated incident response demo. Runs on EC
 
 ## API Endpoints
 
+### Orders domain (`orders.{subdomain}`)
 - `GET /` — Embedded frontend UI
 - `GET /health` — Health check (ALB target group)
 - `POST /orders` — Create order with optional discount code
 - `GET /orders/{id}` — Get order by ID
 - `GET /orders` — List orders (optional `?status=` filter)
 - `POST /orders/{id}/refund` — Process refund
+
+### Observer domain (`observer.{subdomain}`)
+- `GET /` — Observer SPA (embedded static files)
+- `GET /health` — Health check
+- `GET /config` — Returns `{region, repo}` from environment variables
+- `GET /api/agent-events/*` — Agent event streaming (shared with orders domain)
+
+Host-based routing in `cmd/api/main.go` dispatches to the correct router based on the `Host` header.
 
 ## The Intentional Bug
 
@@ -50,6 +59,8 @@ demo-order-api/
 │   ├── store/               # DynamoDB operations
 │   ├── middleware/           # Logging, X-Ray, recovery
 │   └── observability/       # X-Ray setup
+├── observer/                # Embedded observer UI (static/ populated at Docker build)
+│   └── embed.go             # go:embed directives
 ├── web/                     # Embedded frontend UI
 │   ├── static/
 │   │   ├── index.html

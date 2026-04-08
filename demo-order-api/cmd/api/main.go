@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -15,6 +16,7 @@ import (
 	"github.com/example/demo-incident-response/demo-order-api/internal/middleware"
 	"github.com/example/demo-incident-response/demo-order-api/internal/observability"
 	"github.com/example/demo-incident-response/demo-order-api/internal/store"
+	"github.com/example/demo-incident-response/demo-order-api/observer"
 	"github.com/example/demo-incident-response/demo-order-api/web"
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
@@ -61,13 +63,23 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Router.
+	mountEventRoutes := func(r chi.Router) {
+		r.Get("/agent-events", events.List)
+		r.Get("/agent-events/latest", events.Latest)
+		r.Get("/agent-events/incidents", events.Incidents)
+	}
+
+	baseMiddleware := func(r chi.Router) {
+		r.Use(chimw.RequestID)
+		r.Use(chimw.RealIP)
+		r.Use(middleware.Recovery)
+		r.Use(middleware.Logging)
+	}
+
+	// Orders router.
 	r := chi.NewRouter()
-	r.Use(chimw.RequestID)
-	r.Use(chimw.RealIP)
+	baseMiddleware(r)
 	r.Use(middleware.XRay("demo-order-api"))
-	r.Use(middleware.Recovery)
-	r.Use(middleware.Logging)
 
 	r.Get("/health", handler.Health)
 	r.Post("/orders", orders.Create)
@@ -77,9 +89,7 @@ func main() {
 
 	r.Route("/api", func(api chi.Router) {
 		api.Use(middleware.CORS)
-		api.Get("/agent-events", events.List)
-		api.Get("/agent-events/latest", events.Latest)
-		api.Get("/agent-events/incidents", events.Incidents)
+		mountEventRoutes(api)
 	})
 
 	// Serve embedded frontend.
@@ -89,6 +99,23 @@ func main() {
 		http.ServeFileFS(w, r, staticFS, "index.html")
 	})
 
+	// Observer router — serves on observer.* subdomain.
+	obsRouter := chi.NewRouter()
+	baseMiddleware(obsRouter)
+
+	obsRouter.Get("/health", handler.Health)
+	obsRouter.Get("/config", handler.Config)
+	obsRouter.Route("/api", func(api chi.Router) {
+		mountEventRoutes(api)
+	})
+
+	observerFS, err := fs.Sub(observer.Assets, "static")
+	if err != nil {
+		slog.Error("failed to load observer assets", "error", err)
+		os.Exit(1)
+	}
+	obsRouter.Handle("/*", http.FileServer(http.FS(observerFS)))
+
 	// Server.
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -97,7 +124,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:         ":" + port,
-		Handler:      r,
+		Handler:      hostSwitch(r, obsRouter),
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  60 * time.Second,
@@ -122,4 +149,16 @@ func main() {
 	if err := srv.Shutdown(ctx); err != nil {
 		slog.Error("server shutdown failed", "error", err)
 	}
+}
+
+// hostSwitch routes requests to the observer router when the Host header
+// starts with "observer.", otherwise falls through to the orders router.
+func hostSwitch(orders, obs http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.Host, "observer.") {
+			obs.ServeHTTP(w, r)
+			return
+		}
+		orders.ServeHTTP(w, r)
+	})
 }

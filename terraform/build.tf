@@ -1,22 +1,28 @@
 locals {
-  app_dir = "${path.module}/../demo-order-api"
+  app_dir      = "${path.module}/../demo-order-api"
+  observer_dir = "${path.module}/../observer"
+  project_root = "${path.module}/.."
 
-  app_src = sort(concat(
+  app_files      = sort(concat(
     tolist(fileset(local.app_dir, "**/*.go")),
     tolist(fileset(local.app_dir, "Dockerfile")),
     tolist(fileset(local.app_dir, "go.mod")),
     tolist(fileset(local.app_dir, "go.sum")),
     tolist(fileset(local.app_dir, "web/**/*")),
   ))
+  observer_files = sort(fileset(local.observer_dir, "**/*"))
 
-  app_source_hash = sha1(join("", [for f in local.app_src : filesha256("${local.app_dir}/${f}")]))
+  app_source_hash = sha1(join("", concat(
+    [for f in local.app_files : filesha256("${local.app_dir}/${f}")],
+    [for f in local.observer_files : filesha256("${local.observer_dir}/${f}")],
+  )))
 }
 
 resource "terraform_data" "app_image" {
   triggers_replace = [local.app_source_hash]
 
   provisioner "local-exec" {
-    working_dir = local.app_dir
+    working_dir = local.project_root
     environment = {
       REPO_URL   = aws_ecr_repository.app.repository_url
       IMAGE_TAG  = var.app_image_tag
@@ -26,7 +32,7 @@ resource "terraform_data" "app_image" {
     command = <<-EOT
       aws ecr get-login-password --region "$REGION" \
         | docker login --username AWS --password-stdin "$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com"
-      docker build --provenance=false --platform linux/arm64 -t "$REPO_URL:$IMAGE_TAG" .
+      docker build --provenance=false --platform linux/arm64 -f demo-order-api/Dockerfile -t "$REPO_URL:$IMAGE_TAG" .
       docker push "$REPO_URL:$IMAGE_TAG"
     EOT
   }

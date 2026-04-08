@@ -70,8 +70,8 @@ Use AskUserQuestion to confirm each setting. Always ask — never silently reuse
    - GitHub: fine-grained PAT with Issues (rw), Contents (rw)
    - GitLab: project access token with `api` scope
    Store it with `scripts/update-git-pat.sh`, then re-run `just preflight` to verify all 7 checks pass. If the PAT check still fails, ask the user to provide a new one.
-3. Open browser tabs: App UI (`https://${APP_DOMAIN}`), CloudWatch Dashboard, Issues page, and Observer UI.
-4. **Start the Observer** — run `just observer` in a separate terminal. Open browser tab to http://localhost:9090 to watch the agent triage run in real-time.
+3. Open browser tabs: App UI (`https://${APP_DOMAIN}`), CloudWatch Dashboard, Issues page, and Observer UI (`https://observer.${SUBDOMAIN}`).
+4. **Open the Observer** — open browser tab to `https://observer.${SUBDOMAIN}` to watch the agent triage run in real-time. For local development, `just observer` also serves it on http://localhost:9090.
 5. `just steady` — start baseline traffic. **Must be running before inject** so the dashboard shows a healthy baseline for contrast.
 6. `just inject` — sends WELCOME discount code requests that trigger the index-out-of-range panic.
 7. Watch the CloudWatch dashboard — error rate climbs, alarm fires within ~90 seconds.

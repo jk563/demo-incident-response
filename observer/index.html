@@ -170,7 +170,7 @@
 									<span class="result-label">Traces:</span>
 									<div class="trace-list">
 										<template x-for="tid in step.result.trace_ids" :key="tid">
-											<a class="trace-id" :href="`https://${new URLSearchParams(window.location.search).get('region') || 'eu-west-2'}.console.aws.amazon.com/xray/home?region=${new URLSearchParams(window.location.search).get('region') || 'eu-west-2'}#/traces/${tid}`" target="_blank" x-text="tid.split('-').pop().slice(0,12) + '…'"></a>
+											<a class="trace-id" :href="`https://${region}.console.aws.amazon.com/xray/home?region=${region}#/traces/${tid}`" target="_blank" x-text="tid.split('-').pop().slice(0,12) + '…'"></a>
 										</template>
 									</div>
 								</div>

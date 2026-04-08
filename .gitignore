@@ -9,6 +9,9 @@ terraform/terraform.tfvars
 /bin/
 demo-order-api/api
 
+# Observer static files (copied during Docker build)
+demo-order-api/observer/static/
+
 # Generated slides
 slides/deck.pptx
 
