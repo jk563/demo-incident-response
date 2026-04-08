@@ -77,9 +77,9 @@ just tail-agent
 │   └── cmd/                 # steady + inject
 ├── scripts/                 # Build, seed, preflight, reset helpers
 ├── slides/                  # Marp presentation deck
-├── docs/                    # Architecture, backlog, runbook
+├── docs/                    # Architecture and runbook
 ├── bin/                     # Compiled Go binaries (gitignored)
-├── test/                    # E2E tests (all paths except the WELCOME bug)
+├── test/                    # E2E tests
 └── justfile                 # Primary interface for all operations
 ```
 
@@ -88,16 +88,14 @@ just tail-agent
 | Document | Description |
 |----------|-------------|
 | [docs/architecture.md](docs/architecture.md) | System architecture, diagrams, design decisions |
-| [docs/backlog.md](docs/backlog.md) | Feature/task backlog (8 epics) |
+
 | [docs/runbook.md](docs/runbook.md) | Demo day runbook and fallback procedures |
 | [agent/prompts/system.md](agent/prompts/system.md) | Agent system prompt and RCA template |
 | [slides/deck.md](slides/deck.md) | Presentation slide deck |
 
 ## The Bug
 
-The Go order API has a deliberate bug: the `WELCOME` discount code maps to tier index 3, but only 3 tiers exist (indices 0–2). This causes an index-out-of-range panic on any order using the WELCOME code. All other discount codes work fine.
-
-This is a realistic coordination bug — someone added a promotional code but forgot to add the corresponding discount tier.
+The Go order API contains a deliberate bug that causes a panic when a specific discount code is used. This is the demo trigger — the agent discovers and diagnoses it autonomously.
 
 ## AWS Resources
 

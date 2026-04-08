@@ -68,19 +68,8 @@ curl -X POST https://$APP_DOMAIN/orders/{id}/refund
 | `SAVE5` | Bronze | 5% |
 | `SAVE10` | Silver | 10% |
 | `SAVE15` | Gold | 15% |
-| `WELCOME` | **BUG** | Causes panic (index out of range) |
 
-The `WELCOME` code is an intentional bug for the demo. See the [Intentional Bug](#the-intentional-bug) section.
-
-## The Intentional Bug
-
-In `internal/discount/discount.go`, the `codeToTier` map assigns index 3 to `WELCOME`, but the `tiers` slice only has 3 entries (indices 0–2). Any order with `discount_code: "WELCOME"` triggers a panic:
-
-```
-runtime error: index out of range [3] with length 3
-```
-
-This simulates a realistic coordination bug: a developer added the promotional code mapping but forgot to add the corresponding discount tier. Tests deliberately omit coverage for the WELCOME code.
+The API also contains a deliberate bug triggered by a specific discount code. This is the demo trigger — the triage agent discovers and diagnoses it autonomously.
 
 ## DynamoDB Schema
 
@@ -178,4 +167,4 @@ just build-app
 go test ./...
 ```
 
-Tests cover valid discount codes, handler happy paths, and store marshalling. The `WELCOME` discount code is deliberately untested.
+Tests cover valid discount codes, handler happy paths, and store marshalling.

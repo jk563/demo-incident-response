@@ -2,13 +2,13 @@
 
 ## System Overview
 
-This project demonstrates end-to-end automated incident response on AWS. A Go order API running on ECS Fargate experiences a real failure — an index out of bounds panic triggered by a specific discount code — and AWS-native observability detects the resulting error spike. A Strands AI agent, running as a Python Lambda function, triages the incident automatically: it queries CloudWatch logs, metrics, and X-Ray traces, inspects the source code, and creates a GitHub issue containing a structured engineering root cause analysis (RCA).
+This project demonstrates end-to-end automated incident response on AWS. A Go order API running on ECS Fargate experiences a real failure, and AWS-native observability detects the resulting error spike. A Strands AI agent, running as a Python Lambda function, triages the incident automatically: it queries CloudWatch logs, metrics, and X-Ray traces, inspects the source code, and creates a GitHub issue containing a structured engineering root cause analysis (RCA).
 
 The system comprises the following components:
 
 | Component | Technology | Purpose |
 |---|---|---|
-| **Order API** | Go on ECS Fargate | Order processing service at `orders.${SUBDOMAIN}`, with an intentional bug |
+| **Order API** | Go on ECS Fargate | Order processing service at `orders.${SUBDOMAIN}` |
 | **Observer UI** | Alpine.js SPA (embedded in Go binary) | Real-time view of agent triage runs at `observer.${SUBDOMAIN}` |
 | **DynamoDB** | On-demand table | Orders storage (partition key `id`, GSI `status-index`) |
 | **Traffic Generator** | Two Go binaries | `steady` (happy-path codes at ~10 req/s) and `inject` (buggy code at ~5 req/s) |
@@ -24,7 +24,7 @@ The system comprises the following components:
 graph TB
     subgraph "Traffic Generation"
         TG_STEADY["steady binary<br/>(~10 req/s)<br/>SAVE5 / SAVE10 / SAVE15"]
-        TG_INJECT["inject binary<br/>(~5 req/s)<br/>WELCOME code"]
+        TG_INJECT["inject binary<br/>(~5 req/s)<br/>error traffic"]
     end
 
     subgraph "Application Layer"
@@ -78,25 +78,24 @@ graph TB
     API --> EVENTS_DDB
 ```
 
-### Data Flow — Happy Path vs Failure Path
+### Data Flow
 
 ```mermaid
 graph LR
-    subgraph "Happy Path (SAVE5 / SAVE10 / SAVE15)"
-        HP_REQ["POST /orders<br/>code: SAVE5"] --> HP_DISC["Discount Lookup<br/>tier index 0–2"]
+    subgraph "Happy Path"
+        HP_REQ["POST /orders<br/>with discount code"] --> HP_DISC["Discount Lookup"]
         HP_DISC --> HP_CALC["Calculate Total<br/>(discount applied)"]
         HP_CALC --> HP_DDB["Write to DynamoDB<br/>status: confirmed"]
         HP_DDB --> HP_RESP["200 OK<br/>order response"]
     end
 
-    subgraph "Failure Path (WELCOME)"
-        FP_REQ["POST /orders<br/>code: WELCOME"] --> FP_DISC["Discount Lookup<br/>tier index 3"]
-        FP_DISC --> FP_PANIC["PANIC<br/>index out of range [3]<br/>with length 3"]
-        FP_PANIC --> FP_RECOVER["Recovery Middleware"]
+    subgraph "Failure Path"
+        FP_REQ["POST /orders<br/>with buggy code"] --> FP_FAIL["Panic"]
+        FP_FAIL --> FP_RECOVER["Recovery Middleware"]
         FP_RECOVER --> FP_RESP["500 Internal<br/>Server Error"]
     end
 
-    style FP_PANIC fill:#e74c3c,color:#fff
+    style FP_FAIL fill:#e74c3c,color:#fff
     style FP_RESP fill:#e74c3c,color:#fff
     style HP_RESP fill:#27ae60,color:#fff
 ```
@@ -184,37 +183,6 @@ sequenceDiagram
 | **Traffic generator** | Two Go binaries: `steady` and `inject` | Compiled binaries for minimal overhead; separate binaries give precise control over demo timing |
 | **Frontend** | `go:embed` | Single binary ships static assets (orders UI + observer SPA); host-based routing serves each on its own subdomain |
 | **Demo reset** | `terraform destroy` / `terraform apply` | Clean-room reproducibility; entire stack rebuilt in minutes |
-
-## The Bug
-
-The order API contains a deliberate bug in the discount calculation logic. It is the centrepiece of the demo — **it must not be fixed**.
-
-### How It Works
-
-The discount system uses a two-level mapping:
-
-1. **Promo code → tier index**: A map associates each discount code with a numeric tier.
-2. **Tier index → discount percentage**: A slice of tiers defines the actual discount values.
-
-The valid codes and their mappings are:
-
-| Code | Tier Index | Discount |
-|---|---|---|
-| `SAVE5` | 0 | 5% |
-| `SAVE10` | 1 | 10% |
-| `SAVE15` | 2 | 15% |
-| `WELCOME` | **3** | **PANIC** |
-
-Three tiers exist at indices 0, 1, and 2. The `WELCOME` code maps to tier index 3, which is out of bounds. This is a classic coordination bug — the promotional code was added to the code-to-tier map, but the corresponding tier was never added to the tier slice.
-
-### Why It Is Effective for the Demo
-
-- **Selective failure**: Only requests using the `WELCOME` code trigger the panic. Steady traffic using `SAVE5`, `SAVE10`, and `SAVE15` is entirely unaffected.
-- **Realistic stack trace**: The Go runtime produces a clear `runtime error: index out of range [3] with length 3` panic, complete with a stack trace pointing to the exact file and line.
-- **Observable signals**: The agent sees three corroborating signals:
-  - **Logs**: Panic stack traces in structured JSON CloudWatch logs.
-  - **Metrics**: Error rate spike on `POST /orders` (the `ErrorCount` metric with `StatusCode=500`).
-  - **Traces**: X-Ray traces showing failure at the discount calculation segment.
 
 ## Observability Stack
 

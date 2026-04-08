@@ -54,7 +54,7 @@ just steady
 
 Pause for effect.
 
-> "Marketing have just launched a new promotional code — WELCOME — for new customers..."
+> "Marketing have just launched a new promotional code for new customers..."
 
 ### 6. Inject buggy traffic
 

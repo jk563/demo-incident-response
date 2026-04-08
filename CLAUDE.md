@@ -10,14 +10,14 @@ Automated incident response demo: a Go order API on ECS Fargate experiences a re
 - `traffic/` — Go traffic generator (two binaries: steady + inject)
 - `scripts/` — Build, seed, preflight, reset helper scripts (includes `update-git-pat.sh`)
 - `slides/` — Marp presentation deck
-- `docs/` — Architecture, backlog, and runbook
+- `docs/` — Architecture and runbook
 - `bin/` — Compiled Go binaries (gitignored)
 - `test/` — End-to-end tests (all paths except the WELCOME bug)
 
 ## Documentation
 
 - `docs/architecture.md` — System architecture with Mermaid diagrams, design decisions, observability stack
-- `docs/backlog.md` — Complete feature/task backlog (8 epics, implementation order)
+
 - `docs/runbook.md` — Demo day runbook (pre-flight, demo script, fallbacks, post-demo)
 - `agent/prompts/system.md` — Strands agent system prompt with RCA format template
 - `slides/deck.md` — Marp presentation deck (10 slides with speaker notes)
